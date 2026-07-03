@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      index: true,
     },
 
     image: {
@@ -20,6 +21,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
+      index: true,
     },
 
     description: {
@@ -41,6 +43,9 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Add compound index for common queries
+productSchema.index({ category: 1, price: 1 });
 
 module.exports = mongoose.model(
   "Product",

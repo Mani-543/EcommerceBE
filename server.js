@@ -1,12 +1,13 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const compression = require("compression");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const uploadRoutes = require("./routes/uploadRoutes");
+
 dotenv.config();
 const paymentRoutes = require("./routes/paymentRoutes");
 
@@ -15,6 +16,9 @@ const paymentRoutes = require("./routes/paymentRoutes");
 connectDB();
 
 const app = express();
+
+// Enable compression middleware
+app.use(compression());
 
 // CORS Configuration
 app.use(
@@ -32,11 +36,19 @@ app.use(
 
 app.use(express.json());
 
+// Cache control for API responses (short cache for product data)
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.url.includes('/products')) {
+    res.set('Cache-Control', 'public, max-age=300'); // 5 minutes cache
+  }
+  next();
+});
+
 // Routes
 app.use("/api/users", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/upload", uploadRoutes);
+
 app.use("/api/payment", paymentRoutes);
 
 // Test Route

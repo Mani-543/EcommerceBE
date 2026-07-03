@@ -3,50 +3,55 @@ const Product = require("../models/Product");
 // Get All Products
 const getProducts =
   async (req, res) => {
+    try {
+      const filter = {};
 
-    const filter = {};
+      if (req.query.keyword) {
+        filter.name = {
+          $regex: req.query.keyword,
+          $options: "i",
+        };
+      }
 
-    if (req.query.keyword) {
-      filter.name = {
-        $regex: req.query.keyword,
-        $options: "i",
-      };
+      if (req.query.category) {
+        filter.category =
+          req.query.category;
+      }
+
+      const pageSize = 8;
+
+      const page =
+        Number(
+          req.query.pageNumber
+        ) || 1;
+
+      // Use aggregation for better performance
+      const skip = pageSize * (page - 1);
+
+      const [products, count] = await Promise.all([
+        Product.find(filter)
+          .select("name image brand category price countInStock _id")
+          .lean()
+          .limit(pageSize)
+          .skip(skip)
+          .exec(),
+        Product.countDocuments(filter)
+      ]);
+
+      res.json({
+        products,
+        page,
+        pages:
+          Math.ceil(
+            count /
+            pageSize
+          )
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
     }
-
-    if (req.query.category) {
-      filter.category =
-        req.query.category;
-    }
-
-    const pageSize = 8;
-
-    const page =
-      Number(
-        req.query.pageNumber
-      ) || 1;
-
-    const count =
-      await Product.countDocuments(
-        filter
-      );
-
-    const products =
-      await Product.find(filter)
-        .limit(pageSize)
-        .skip(
-          pageSize *
-          (page - 1)
-        );
-
-    res.json({
-      products,
-      page,
-      pages:
-        Math.ceil(
-          count /
-          pageSize
-        )
-    });
   };
 
 // Get Single Product
@@ -166,5 +171,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getAllProductsAdmin,
- 
+
 };

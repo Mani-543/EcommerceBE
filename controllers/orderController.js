@@ -3,13 +3,21 @@ const Order = require("../models/Order");
 // Create Order
 const addOrder = async (req, res) => {
   try {
+    console.log("========== ORDER API HIT ==========");
+    console.log("USER:", req.user);
+    console.log("BODY:", req.body);
+
     const order = await Order.create({
       ...req.body,
       user: req.user._id,
     });
 
+    console.log("ORDER CREATED:", order);
+
     res.status(201).json(order);
   } catch (error) {
+    console.log("ORDER ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
